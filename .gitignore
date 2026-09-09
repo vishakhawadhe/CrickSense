@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+ai/venv/
+venv/
+
+# Generated output videos
+ai/output/*.mp4
+ai/output/*.avi
+
+# Test/input videos
+ai/videos/*.mp4
+ai/videos/*.avi
+ai/videos/*.mov
+
+# IDE temporary files
+.vscode/
+.pyrefly/
+.pyrefly.json
+*.pyrightconfig.json
+
+# OS files
+.DS_Store
+Thumbs.db

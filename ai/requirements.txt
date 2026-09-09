@@ -1,0 +1,6 @@
+# CrickSense — Step 1: Pose Detection Dependencies
+# Install with: pip install -r requirements.txt
+
+opencv-python    # Video reading, drawing, and output writing
+mediapipe        # BlazePose model — 33 body landmark detection
+numpy            # Numerical arrays (used internally by both above)

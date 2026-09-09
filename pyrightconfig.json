@@ -1,0 +1,10 @@
+{
+  "pythonPlatform": "Windows",
+  "pythonVersion": "3.10",
+  "venvPath": "ai",
+  "venv": "venv",
+  "extraPaths": [
+    "ai/venv/Lib/site-packages",
+    "ai"
+  ]
+}

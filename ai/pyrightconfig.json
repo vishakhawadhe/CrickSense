@@ -1,0 +1,9 @@
+{
+  "pythonPlatform": "Windows",
+  "pythonVersion": "3.10",
+  "venvPath": "d:/BE_PROJECT/CrickSense/ai",
+  "venv": "venv",
+  "extraPaths": [
+    "d:/BE_PROJECT/CrickSense/ai/venv/Lib/site-packages"
+  ]
+}
