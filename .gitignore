@@ -25,3 +25,6 @@ ai/videos/*.mov
 # OS files
 .DS_Store
 Thumbs.db
+
+# Dataset raw videos
+ai/data/raw/

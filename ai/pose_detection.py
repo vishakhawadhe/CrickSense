@@ -38,6 +38,7 @@ import cv2
 import mediapipe as mp
 import os
 import sys
+import csv
 import numpy as np
 from typing import Any, Optional, Tuple, List, Dict
 
@@ -376,22 +377,36 @@ def draw_pose_on_frame(frame: np.ndarray, target_landmarks, target_bbox) -> int:
 def process_video(cap: cv2.VideoCapture,
                   writer: cv2.VideoWriter,
                   total_frames: int,
-                  pose_landmarker: Any):
+                  pose_landmarker: Any,
+                  video_id: str,
+                  csv_path: str):
     """
     Main loop:
         1. Read each frame from the video using OpenCV.
         2. Convert the frame to a MediaPipe Image object.
         3. Pass it to PoseLandmarker for multi-person detection.
         4. Select ONLY the target bowler using persistent TargetBowlerTracker.
-        5. Draw skeleton, bounding box, and label ONLY for the selected bowler.
-        6. If lost, render red TARGET LOST banner without switching identity.
-        7. Write the processed frame to the output video.
+        5. Extract and save the 33 pose landmarks to a CSV file.
+        6. Draw skeleton, bounding box, and label ONLY for the selected bowler.
+        7. If lost, render red TARGET LOST banner without switching identity.
+        8. Write the processed frame to the output video.
     """
     frame_index = 0
     total_candidates_detected = 0
     target_detected_count = 0
     target_lost_count = 0
     tracker = TargetBowlerTracker()
+
+    # Prepare CSV headers
+    csv_headers = ["video_id", "frame_id", "target_detected"]
+    for i in range(33):
+        csv_headers.extend([f"landmark_{i}_x", f"landmark_{i}_y", f"landmark_{i}_z", f"landmark_{i}_visibility"])
+    
+    csv_file = open(csv_path, mode='w', newline='')
+    csv_writer = csv.writer(csv_file)
+    csv_writer.writerow(csv_headers)
+    csv_rows_count = 0
+    landmark_cols_count = 33 * 4
 
     print("[INFO] Starting frame-by-frame processing...\n")
     print(f"{'Frame':>6}  {'Candidates':>10}  {'Target Bowler Status'}")
@@ -419,6 +434,19 @@ def process_video(cap: cv2.VideoCapture,
         # Select target bowler
         target_landmarks, target_bbox = tracker.select_target(pose_landmarks_list)
 
+        # Save to CSV
+        csv_row = [video_id, frame_index]
+        if target_landmarks is not None:
+            csv_row.append(1)  # target_detected = 1
+            for lm in target_landmarks:
+                csv_row.extend([lm.x, lm.y, lm.z, getattr(lm, 'visibility', getattr(lm, 'presence', ''))])
+        else:
+            csv_row.append(0)  # target_detected = 0
+            csv_row.extend([""] * (33 * 4)) # empty values for landmarks
+        
+        csv_writer.writerow(csv_row)
+        csv_rows_count += 1
+
         # Draw overlay for target bowler only or TARGET LOST banner
         num_landmarks_drawn = draw_pose_on_frame(frame, target_landmarks, target_bbox)
 
@@ -436,7 +464,8 @@ def process_video(cap: cv2.VideoCapture,
             pct = (frame_index / total_frames) * 100 if total_frames > 0 else 0
             print(f"\n  [Progress] {frame_index}/{total_frames} frames  ({pct:.1f}%)\n")
 
-    return frame_index, total_candidates_detected, target_detected_count, target_lost_count
+    csv_file.close()
+    return frame_index, total_candidates_detected, target_detected_count, target_lost_count, csv_rows_count, landmark_cols_count
 
 
 # ---------------------------------------------------------------------------
@@ -457,6 +486,15 @@ def main():
     fps, total_frames, width, height = print_video_info(cap, INPUT_VIDEO_PATH)
     writer = create_video_writer(OUTPUT_VIDEO_PATH, fps, width, height)
 
+    video_basename = os.path.basename(INPUT_VIDEO_PATH)
+    video_id = os.path.splitext(video_basename)[0]
+    category = os.path.basename(os.path.dirname(INPUT_VIDEO_PATH))
+    if category not in ["General", "U15", "U19"]:
+        category = ""
+    csv_filename = f"{video_id}_landmarks.csv"
+    csv_path = os.path.join(os.path.dirname(__file__), "data", "landmarks", category, csv_filename)
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+
     print("[INFO] Loading MediaPipe PoseLandmarker model (num_poses=5)...")
     base_options = BaseOptions(model_asset_path=MODEL_PATH)
     options = PoseLandmarkerOptions(
@@ -470,8 +508,8 @@ def main():
 
     with PoseLandmarker.create_from_options(options) as pose_landmarker:
         print("[INFO] Model loaded. Starting target bowler detection...\n")
-        frames_processed, total_candidates, target_detected_count, target_lost_count = process_video(
-            cap, writer, total_frames, pose_landmarker
+        frames_processed, total_candidates, target_detected_count, target_lost_count, csv_rows, landmark_cols = process_video(
+            cap, writer, total_frames, pose_landmarker, video_id, csv_path
         )
 
     cap.release()
@@ -489,6 +527,9 @@ def main():
     print(f"  Frames with target bowler selected: {target_detected_count} ({target_detection_rate:.1f}%)")
     print(f"  Frames with target bowler lost    : {target_lost_count}")
     print(f"  Output video saved to             : {OUTPUT_VIDEO_PATH}")
+    print(f"  Number of CSV rows                : {csv_rows}")
+    print(f"  Number of landmark columns        : {landmark_cols}")
+    print(f"  CSV output path                   : {csv_path}")
     print("=" * 60 + "\n")
     print("[SUCCESS] Target bowler pose selection test complete!\n")
 
