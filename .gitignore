@@ -8,13 +8,12 @@ ai/venv/
 venv/
 
 # Generated output videos
-ai/output/*.mp4
-ai/output/*.avi
+ai/output/
+ai/output/**
 
 # Test/input videos
-ai/videos/*.mp4
-ai/videos/*.avi
-ai/videos/*.mov
+ai/videos/
+ai/data/raw/
 
 # IDE temporary files
 .vscode/

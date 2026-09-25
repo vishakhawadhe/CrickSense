@@ -3,11 +3,15 @@ import glob
 import subprocess
 import csv
 
+import sys
+
 BASE_DIR = os.path.dirname(__file__)
 RAW_DIR = os.path.join(BASE_DIR, "data", "raw")
 LANDMARKS_DIR = os.path.join(BASE_DIR, "data", "landmarks")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 PYTHON_EXEC = os.path.join(BASE_DIR, "venv", "Scripts", "python.exe")
+if not os.path.exists(PYTHON_EXEC):
+    PYTHON_EXEC = sys.executable
 SCRIPT_PATH = os.path.join(BASE_DIR, "pose_detection.py")
 
 CATEGORIES = ["General", "U15", "U19"]

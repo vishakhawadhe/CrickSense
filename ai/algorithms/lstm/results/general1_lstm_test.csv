@@ -1,0 +1,18 @@
+metric,value
+dataset,General
+video,General1.mp4
+total_frames,76
+valid_frames,76
+lost_frames,0
+num_joints,33
+coordinates,X/Y/Z
+features_per_frame,99
+input_tensor_shape,"[1, 76, 99]"
+lstm_hidden_size,128
+lstm_num_layers,2
+output_tensor_shape,"[1, 2]"
+num_model_parameters,249602
+forward_pass_execution_time_ms,108.83
+forward_pass,PASS
+training_status,NOT TRAINED
+accuracy,N/A -- MODEL NOT TRAINED

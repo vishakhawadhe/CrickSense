@@ -41,14 +41,15 @@ import sys
 import csv
 import numpy as np
 from typing import Any, Optional, Tuple, List, Dict
+from mediapipe.framework.formats import landmark_pb2
 
 # MediaPipe 1.0.x Tasks API imports (compatible with mediapipe >= 1.0.0)
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
 PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
 RunningMode = mp.tasks.vision.RunningMode
-PoseLandmarksConnections = mp.tasks.vision.PoseLandmarksConnections
-drawing_utils = mp.tasks.vision.drawing_utils
-drawing_styles = mp.tasks.vision.drawing_styles
+PoseLandmarksConnections = mp.solutions.pose.POSE_CONNECTIONS
+drawing_utils = mp.solutions.drawing_utils
+drawing_styles = mp.solutions.drawing_styles
 BaseOptions = mp.tasks.BaseOptions
 
 
@@ -337,10 +338,22 @@ def draw_pose_on_frame(frame: np.ndarray, target_landmarks, target_bbox) -> int:
         )
         return 0
 
+    if isinstance(target_landmarks, list):
+        target_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
+        for lm in target_landmarks:
+            target_landmarks_proto.landmark.add(
+                x=lm.x,
+                y=lm.y,
+                z=lm.z,
+                visibility=float(getattr(lm, 'visibility', getattr(lm, 'presence', 0.0)))
+            )
+    else:
+        target_landmarks_proto = target_landmarks
+
     drawing_utils.draw_landmarks(
         image=frame,
-        landmark_list=target_landmarks,
-        connections=PoseLandmarksConnections.POSE_LANDMARKS,
+        landmark_list=target_landmarks_proto,
+        connections=PoseLandmarksConnections,
         landmark_drawing_spec=drawing_utils.DrawingSpec(
             color=LANDMARK_COLOR,
             thickness=LANDMARK_THICKNESS,
